@@ -4,6 +4,7 @@ from bson import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.api import api
 from functools import wraps
+from guests import guests_schema
 import os
 import certifi
 import jwt
@@ -51,9 +52,6 @@ def login_required(f):
 
 
 
-
-
-
 # Routes
 @api.route('/', methods=['GET'])
 def home():
@@ -66,3 +64,53 @@ def guests(guest_id):
     print(guest)
 
     return jsonify(guest), 200
+
+
+@api.route('/guests/register', methods=['POST'])
+def new_guest():
+    data = request.get_json()
+
+    try:
+        username = data['username']
+        password = data['password']
+    except:
+        return jsonify({'error': 'Missing gields.'}), 400
+    
+    if db.guests.find_one({'username': username}):
+        return jsonify({'error': 'Username already exists.'}), 400
+
+    guests_schema['username'] = username
+    guests_schema['password'] = generate_password_hash(password)
+    db.guests.update_one(guests_schema,{ '$set':guests_schema}, upsert=True)
+
+    return jsonify(doc2json(guests_schema)), 200
+
+
+
+@api.route('/guests/login', methods=['POST'])
+def login():
+    data = request.get_json()
+
+    try:
+        username = data['username']
+        password = data['password']
+    except:
+        return jsonify({'error': 'Missing fields.'}), 400
+
+    guest = db.guests.find_one({'username': username})
+
+    if not guest:
+        return jsonify({'error': 'Username does not exist.'}), 400
+    
+    if check_password_hash(guest['password'], password):
+        token = jwt.encode({
+            '_id': str(guest['_id'])
+        }, current_app.config.get('SECRET_KEY'))
+
+        db.guests.update_one({'_id': guest['_id']}, {'$set': {
+            'token': token
+        }})
+        
+        return jsonify({'token': token, '_id': str(guest['_id'])}), 200
+
+    return jsonify({'error': 'Password is incorrect.'}), 400
