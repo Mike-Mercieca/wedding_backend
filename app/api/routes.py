@@ -140,3 +140,19 @@ def logout():
         return jsonify({'error': 'Invalid credentials.'}), 401
 
     return jsonify(), 200
+
+
+# Add additional guests to username
+@api.route('/guests/<guest_id>/plusone', methods=['PUT'])
+def plusone(guest_id):
+    data = request.get_json()
+    db.guests.update_one({'_id': ObjectId(guest_id)}, {'$set': data})
+
+    guest = db.guests.find_one({'_id': ObjectId(guest_id)})
+    return jsonify(doc2json(guest)), 200
+
+
+
+
+
+
