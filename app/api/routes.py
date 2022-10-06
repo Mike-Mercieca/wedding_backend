@@ -57,7 +57,7 @@ def login_required(f):
 def home():
     return 'Welcome to the wedding backend'
     
-
+# Get one guest information
 @api.route('/guests/<guest_id>', methods=['GET'])
 def guests(guest_id):
     guest = doc2json(db.guests.find_one({ '_id': ObjectId(guest_id)}))
@@ -66,6 +66,7 @@ def guests(guest_id):
     return jsonify(guest), 200
 
 
+# Create a new guest
 @api.route('/guests/register', methods=['POST'])
 def new_guest():
     data = request.get_json()
@@ -86,7 +87,7 @@ def new_guest():
     return jsonify(doc2json(guests_schema)), 200
 
 
-
+# Login a guest
 @api.route('/guests/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -114,3 +115,28 @@ def login():
         return jsonify({'token': token, '_id': str(guest['_id'])}), 200
 
     return jsonify({'error': 'Password is incorrect.'}), 400
+
+
+# Logout a guest
+@api.route('/guests/logout', methods=['POST'])
+def logout():
+    auth = request.headers.get('Authorization')
+
+    try:
+        token = auth.split(' ')[1]
+        payload = jwt.decode(token, current_app.config.get('SECRET_KEY'), algorithms =['HS256'])
+        print(payload)
+        user = db.guests.find_one({'_id': ObjectId(payload['_id'])})
+
+        print(user)
+
+        assert user
+        assert user['token'] == token 
+
+        db.guests.update_one({'_id': ObjectId(payload['_id'])}, {'$set': {
+            'token': ''
+        }})
+    except:
+        return jsonify({'error': 'Invalid credentials.'}), 401
+
+    return jsonify(), 200
