@@ -9,6 +9,7 @@ pymongo = "*"
 werkzeug = "*"
 flask-cors = "*"
 certifi = "*"
+dnspython = "*"
 
 [dev-packages]
 
