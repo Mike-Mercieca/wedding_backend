@@ -1,7 +1,7 @@
 Flask==2.0.2
-pymongo = "*"
-werkzeug = "*"
-flask-cors = "*"
-certifi = "*"
-dnspython = "*"
-pyjwt = "*"
+pymongo == "*"
+werkzeug == "*"
+flask-cors == "*"
+certifi == "*"
+dnspython == "*"
+pyjwt == "*"
