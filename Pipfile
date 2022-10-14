@@ -10,7 +10,7 @@ werkzeug = "*"
 flask-cors = "*"
 certifi = "*"
 dnspython = "*"
-pyjwt = "*"
+jwt = "*"
 
 [dev-packages]
 
